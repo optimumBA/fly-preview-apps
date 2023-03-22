@@ -51,15 +51,16 @@ fi
 # find a way to create postgres for the app here👇
 # basically, look for "migrate" file in the app files
 # if it exists, the app probably needs DB.
-if [ stat rel/overlays/bin/migrate ]; then
+if stat rel/overlays/bin/migrate; then
   flyctl postgres create --name "$app_db" --org "$org" --region "$region" --vm-size shared-cpu-1x --initial-cluster-size 1 --volume-size 10
+  fly volumes create "$app" --app "$app" --region "$region"
 fi
 
 # check if the app needs volumes, then create them
-if [ grep -q \[mounts\] "$config" ]; then
-  fly volumes create "$app" --app "$app" --region "$region"
-  # 🎯 then, update the config, to have the newly created volume name
-fi
+# if [ grep -q \[mounts\] "$config" ]; then
+#   fly volumes create "$app" --app "$app" --region "$region"
+#   # 🎯 then, update the config, to have the newly created volume name
+# fi
 
 # Scale the VM before the deploy.
 # this is probably not needed at the moment
