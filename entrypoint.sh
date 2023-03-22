@@ -53,6 +53,8 @@ fi
 # if it exists, the app probably needs DB.
 if stat rel/overlays/bin/migrate; then
   flyctl postgres create --name "$app_db" --org "$org" --region "$region" --vm-size shared-cpu-1x --initial-cluster-size 1 --volume-size 10
+  # attaching db to the app
+  flyctl postgres attach --app "$app"
   VOLUME=${PR_NUMBER//-/_}
   fly volumes create "$VOLUME" --app "$app" --region "$region"
 fi
@@ -81,9 +83,10 @@ if [ -n "$INPUT_SECRETS" ]; then
 fi
 
 # Attach postgres cluster to the app if specified.
-if [ -n "$APP_NAME" ]; then
-  flyctl postgres attach --app "$APP_NAME" || true
-fi
+# if [ -n "$APP_NAME" ]; then
+# echo "<<==== attaching postgres to app $APP_NAME ====>>"
+#   flyctl postgres attach --app "$APP_NAME" || true
+# fi
 
 # Trigger the deploy of the new version.
 echo "Contents of config $config file: " && cat "$config"
