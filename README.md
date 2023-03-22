@@ -4,20 +4,20 @@ This GitHub action wraps the Fly.io CLI to automatically deploy pull requests to
 
 This action will create, deploy, and destroy Fly apps. Just set an Action Secret for `FLY_API_TOKEN`.
 
-If you have an existing `fly.toml` in your repo, this action will copy it with a new name when deploying. By default, Fly apps will be named with the scheme `pr-{number}-{repo_org}-{repo_name}`.
+If you have an existing `fly.toml` in your repo, this action will copy it with a new name when deploying. By default, Fly apps will be named with the scheme `pr-{number}-{repo_name}`.
 
 ## Inputs
 
-| name       | description                                                                                                                                                                                              |
-|------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `name`     | The name of the Fly app. Alternatively, set the env `FLY_APP`. For safety, must include the PR number. Example: `myapp-pr-${{ github.event.number }}`. Defaults to `pr-{number}-{repo_org}-{repo_name}`. |
-| `image`    | Optional pre-existing Docker image to use                                                                                                                                                                |
-| `config`   | Optional path to a custom Fly toml config. Config path should be relative to `path` parameter, if specified.                                                                                             |
-| `region`   | Which Fly region to run the app in. Alternatively, set the env `FLY_REGION`. Defaults to `iad`.                                                                                                          |
-| `org`      | Which Fly organization to launch the app under. Alternatively, set the env `FLY_ORG`. Defaults to `personal`.                                                                                            |
-| `path`     | Path to run the `flyctl` commands from. Useful if you have an existing `fly.toml` in a subdirectory.                                                                                                     |
-| `postgres` | Optional name of an existing Postgres cluster to `flyctl postgres attach` to.                                                                                                                            |
-| `update`   | Whether or not to update this Fly app when the PR is updated. Default `true`.                                                                                                                            |
+| name       | description                                                                                                                                                                                   |
+| ---------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `name`     | The name of the Fly app. Alternatively, set the env `FLY_APP`. For safety, must include the PR number. Example: `myapp-pr-${{ github.event.number }}`. Defaults to `pr-{number}-{repo_name}`. |
+| `image`    | Optional pre-existing Docker image to use                                                                                                                                                     |
+| `config`   | Optional path to a custom Fly toml config. Config path should be relative to `path` parameter, if specified.                                                                                  |
+| `region`   | Which Fly region to run the app in. Alternatively, set the env `FLY_REGION`. Defaults to `iad`.                                                                                               |
+| `org`      | Which Fly organization to launch the app under. Alternatively, set the env `FLY_ORG`. Defaults to `personal`.                                                                                 |
+| `path`     | Path to run the `flyctl` commands from. Useful if you have an existing `fly.toml` in a subdirectory.                                                                                          |
+| `postgres` | Optional name of an existing Postgres cluster to `flyctl postgres attach` to.                                                                                                                 |
+| `update`   | Whether or not to update this Fly app when the PR is updated. Default `true`.                                                                                                                 |
 
 ## Required Secrets
 
@@ -51,11 +51,11 @@ jobs:
       url: ${{ steps.deploy.outputs.url }}
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v1
 
       - name: Deploy
         id: deploy
-        uses: superfly/fly-pr-review-apps@1.0.0
+        uses: amos-kibet/fly-pr-review-apps@v1
 ```
 
 ## Cleaning up GitHub environments
@@ -79,14 +79,14 @@ jobs:
       url: ${{ steps.deploy.outputs.url }}
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v1
 
       - name: Deploy app
         id: deploy
-        uses: superfly/fly-pr-review-apps@1.0.0
+        uses: amos-kibet/fly-pr-review-apps@v1
 
       - name: Clean up GitHub environment
-        uses: strumwolf/delete-deployment-environment@v2
+        uses: strumwolf/delete-deployment-environment@v1
         if: ${{ github.event.action == 'closed' }}
         with:
           # ⚠️ The provided token needs permission for admin write:org
@@ -103,11 +103,11 @@ For production apps, it's a good idea to create a new Postgres cluster specifica
 ```yaml
 # ...
 steps:
-  - uses: actions/checkout@v2
+  - uses: actions/checkout@v1
 
   - name: Deploy app
     id: deploy
-    uses: superfly/fly-pr-review-apps@1.0.0
+    uses: amos-kibet/fly-pr-review-apps@v1
     with:
       postgres: myapp-postgres-staging-apps
 ```
@@ -120,10 +120,10 @@ Redis example:
 
 ```yaml
 steps:
-  - uses: actions/checkout@v2
+  - uses: actions/checkout@v1
 
   - name: Deploy redis
-    uses: superfly/fly-pr-review-apps@1.0.0
+    uses: amos-kibet/fly-pr-review-apps@v1
     with:
       update: false # Don't need to re-deploy redis when the PR is updated
       path: redis # Keep fly.toml in a subdirectory to avoid confusing flyctl
@@ -132,7 +132,7 @@ steps:
 
   - name: Deploy app
     id: deploy
-    uses: superfly/fly-pr-review-apps@1.0.0
+    uses: amos-kibet/fly-pr-review-apps@v1
     with:
       name: pr-${{ github.event.number }}-myapp-app
 ```
