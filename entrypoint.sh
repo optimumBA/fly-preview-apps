@@ -53,7 +53,8 @@ fi
 # if it exists, the app probably needs DB.
 if stat rel/overlays/bin/migrate; then
   flyctl postgres create --name "$app_db" --org "$org" --region "$region" --vm-size shared-cpu-1x --initial-cluster-size 1 --volume-size 10
-  fly volumes create "$app" --app "$app" --region "$region"
+  VOLUME=${PR_NUMBER//-/_}
+  fly volumes create "$VOLUME" --app "$app" --region "$region"
 fi
 
 # check if the app needs volumes, then create them
