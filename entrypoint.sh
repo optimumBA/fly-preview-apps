@@ -54,7 +54,7 @@ fi
 if stat rel/overlays/bin/migrate; then
   flyctl postgres create --name "$app_db" --org "$org" --region "$region" --vm-size shared-cpu-1x --initial-cluster-size 1 --volume-size 10
   # attaching db to the app
-  flyctl postgres attach --app "$app"
+  flyctl postgres attach "$app"
   VOLUME=${PR_NUMBER//-/_}
   fly volumes create "$VOLUME" --app "$app" --region "$region"
 fi
