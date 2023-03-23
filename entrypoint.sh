@@ -2,6 +2,8 @@
 
 set -ex
 
+export MIX_ENV=prod
+
 green='\033[0;32m'
 
 if [ -n "$INPUT_PATH" ]; then
