@@ -2,6 +2,8 @@
 
 set -ex
 
+green='\033[0;32m'
+
 if [ -n "$INPUT_PATH" ]; then
   # Allow user to change directories in which to run Fly commands.
   cd "$INPUT_PATH" || exit
@@ -57,10 +59,14 @@ if ! flyctl status --app "$app"; then
   if [ -e "rel/overlays/bin/migrate" ]; then
     # only create db if the app lauched successfully
     if flyctl status --app "$APP"; then
+      echo -e "${green}|> creating DB ====>>"
       flyctl postgres create --name "$app_db" --org "$org" --region "$region" --vm-size shared-cpu-1x --initial-cluster-size 1 --volume-size 10
+      echo -e "${green}|> DB created successfully ====>>"
       # attach db to the app
-      echo "attaching postgres to the app"
-      flyctl postgres attach $"app_db" --app $"app"
+      # attaching db to the app
+      echo -e "${green}|> attaching DB ====>>"
+      flyctl postgres attach "$APP_DB" --app "$APP"
+      echo -e "${green}|> DB attached ====>>"
     fi
   fi
 
@@ -70,13 +76,15 @@ if ! flyctl status --app "$app"; then
   #
   # check if app name has dashes, and replace with underscore
   # Fly.io does not accept dashes in volume names
-  if [[ "$app" =~ "-" ]]; then
-    volume=${app//-/_}
-  fi
+  # if [[ "$app" =~ "-" ]]; then
+  #   volume=${app//-/_}
+  # fi
 
   while IFS= read -r line; do
     if [[ $line == "[mounts]" ]]; then
-      fly volumes create "$volume" --app "$app" --region "$region"
+      echo -e "${green}|> creating volume ====>>"
+      fly volumes create temporary_volume --app "$app" --region "$region"
+      echo -e "${green}|> volume created successfully ====>>"
     fi
   done <"$config"
 fi
