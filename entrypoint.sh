@@ -2,8 +2,6 @@
 
 set -ex
 
-export MIX_ENV=prod
-
 if [ -n "$INPUT_PATH" ]; then
   # Allow user to change directories in which to run Fly commands.
   cd "$INPUT_PATH" || exit
@@ -83,19 +81,17 @@ if ! flyctl status --app "$app"; then
   done <"$config"
 fi
 
+# Deploy the app.
+echo "Contents of config $config file: " && cat "$config"
+flyctl deploy --config "$config" --app "$app" --region "$region" --strategy immediate
+
 # set neccessary secrets
 fly secrets set PHX_HOST="$app".fly.dev --app "$app"
 
 # import any environment secrets that may be required
-if [ -n "$INPUT_SECRETS" ]; then
-  echo $INPUT_SECRETS | tr " " "\n" | flyctl secrets import --app "$app"
-fi
-
-# Show contentsof config file
-echo "Contents of config $config file: " && cat "$config"
-
-# Deploy the app
-flyctl deploy --config "$config" --app "$app" --region "$region" --strategy immediate
+# if [ -n "$INPUT_SECRETS" ]; then
+#   echo $INPUT_SECRETS | tr " " "\n" | flyctl secrets import --app "$app"
+# fi
 
 # Make some info available to the GitHub workflow.
 flyctl status --app "$app" --json >status.json
