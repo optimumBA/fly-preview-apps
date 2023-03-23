@@ -1,4 +1,4 @@
-#!/bin/sh -l
+#!/bin/bash
 
 set -ex
 
@@ -74,16 +74,13 @@ if ! flyctl status --app "$app"; then
   if [[ "$app" =~ "-" ]]; then
     volume=${app//-/_}
   fi
-  while IFS= read -r LINE; do
-    if [[ $LINE == "[mounts]" ]]; then
+
+  while IFS= read -r line; do
+    if [[ $line == "[mounts]" ]]; then
       fly volumes create "$volume" --app "$app" --region "$region"
     fi
   done <"$config"
 fi
-
-# Trigger the deployment of the new version.
-echo "Contents of config $config file: " && cat "$config"
-flyctl deploy --config "$config" --app "$app" --region "$region" --strategy immediate
 
 # set neccessary secrets
 fly secrets set PHX_HOST="$app".fly.dev --app "$app"
@@ -92,6 +89,9 @@ fly secrets set PHX_HOST="$app".fly.dev --app "$app"
 if [ -n "$INPUT_SECRETS" ]; then
   echo $INPUT_SECRETS | tr " " "\n" | flyctl secrets import --app "$app"
 fi
+
+# Deploy the app
+flyctl deploy --config "$config" --app "$app" --region "$region" --strategy immediate
 
 # Make some info available to the GitHub workflow.
 flyctl status --app "$app" --json >status.json
