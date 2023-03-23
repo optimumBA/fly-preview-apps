@@ -61,6 +61,7 @@ if ! flyctl status --app "$app"; then
     if flyctl status --app "$APP"; then
       flyctl postgres create --name "$app_db" --org "$org" --region "$region" --vm-size shared-cpu-1x --initial-cluster-size 1 --volume-size 10
       # attach db to the app
+      echo "attaching postgres to the app"
       flyctl postgres attach $"app_db" --app $"app"
     fi
   fi
@@ -89,6 +90,9 @@ fly secrets set PHX_HOST="$app".fly.dev --app "$app"
 if [ -n "$INPUT_SECRETS" ]; then
   echo $INPUT_SECRETS | tr " " "\n" | flyctl secrets import --app "$app"
 fi
+
+# Show contentsof config file
+echo "Contents of config $config file: " && cat "$config"
 
 # Deploy the app
 flyctl deploy --config "$config" --app "$app" --region "$region" --strategy immediate
