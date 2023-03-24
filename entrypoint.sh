@@ -1,8 +1,6 @@
-#!/bin/bash
+#!/bin/sh -l
 
 set -ex
-
-export MIX_ENV=prod
 
 green='\033[0;32m'
 
