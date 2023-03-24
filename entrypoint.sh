@@ -1,4 +1,4 @@
-#!/bin/sh -l
+#!/bin/bash
 
 set -ex
 
@@ -42,7 +42,7 @@ if [ "$EVENT_TYPE" = "closed" ]; then
     flyctl apps destroy "$app_db" -y || true
   fi
   # destroy created volumes
-  # flyctl volumes destroy <id >-y || true
+  # flyctl volumes destroy <id> -y || true
 fi
 
 # Check if app exists,
