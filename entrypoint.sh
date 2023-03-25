@@ -1,4 +1,4 @@
-#!/bin/sh -l
+#!/bin/bash
 
 set -ex
 
@@ -49,9 +49,9 @@ if ! flyctl status --app "$app"; then
   # Backup the original config file since 'flyctl launch' messes up the [build.args] section
   cp "$config" "$config.bak"
 
-  echo -e "|> creating app ====>>"
+  echo -e "${green} |> creating app ====>>"
   flyctl launch --no-deploy --copy-config --name "$app" --region "$region" --org "$org"
-  echo -e "|> app created successfully ====>>"
+  echo -e "${green} |> app created successfully ====>>"
 
   # Restore the original config file
   cp "$config.bak" "$config"
@@ -61,14 +61,14 @@ if ! flyctl status --app "$app"; then
   if [ -e "rel/overlays/bin/migrate" ]; then
     # only create db if the app lauched successfully
     if flyctl status --app "$APP"; then
-      echo -e "|> creating DB ====>>"
+      echo -e "${green} |> creating DB ====>>"
       flyctl postgres create --name "$app_db" --org "$org" --region "$region" --vm-size shared-cpu-1x --initial-cluster-size 1 --volume-size 10
-      echo -e "|> DB created successfully ====>>"
+      echo -e "${green} |> DB created successfully ====>>"
       # attach db to the app
       # attaching db to the app
-      echo -e "|> attaching DB ====>>"
+      echo -e "${green} |> attaching DB ====>>"
       flyctl postgres attach "$APP_DB" --app "$APP"
-      echo -e "|> DB attached ====>>"
+      echo -e "${green} |> DB attached ====>>"
     fi
   fi
 
@@ -84,23 +84,23 @@ if ! flyctl status --app "$app"; then
 
   while IFS= read -r line; do
     if [[ $line == "[mounts]" ]]; then
-      echo -e "|> creating volume ====>>"
+      echo -e "${green} |> creating volume ====>>"
       fly volumes create temporary_volume --app "$app" --region "$region"
-      echo -e "|> volume created successfully ====>>"
+      echo -e "${green} |> volume created successfully ====>>"
     fi
   done <"$config"
 fi
 
 # Deploy the app.
 echo "Contents of config $config file: " && cat "$config"
-echo -e "|> deploying app ====>>"
+echo -e "${green} |> deploying app ====>>"
 flyctl deploy --config "$config" --app "$app" --region "$region" --strategy immediate
-echo -e "|> app deployed successfuly ====>>"
+echo -e "${green} |> app deployed successfuly ====>>"
 
 # set neccessary secrets
-echo -e "|> setting secrets ====>>"
+echo -e "${green} |> setting secrets ====>>"
 fly secrets set PHX_HOST="$app".fly.dev --app "$app"
-echo -e "|> secrets set successfully ====>>"
+echo -e "${green} |> secrets set successfully ====>>"
 
 # import any environment secrets that may be required
 # if [ -n "$INPUT_SECRETS" ]; then

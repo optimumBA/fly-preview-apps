@@ -20,8 +20,6 @@ inputs:
     description: Organization to launch the app in (alternatively, set the env FLY_ORG)
   path:
     description: path to a directory containing a fly.toml to clone
-  postgres:
-    description: Optionally attach the app to a pre-existing Postgres cluster on Fly
   update:
     description: Whether new commits to the PR should re-deploy the Fly app
     default: true
