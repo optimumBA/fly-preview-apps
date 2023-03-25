@@ -1,0 +1,24 @@
+{
+  "name": "fly-pr-review-apps",
+  "version": "1.0.0",
+  "description": "This GitHub action wraps the Fly.io CLI to automatically deploy pull requests to [fly.io](http://fly.io) for review. These are useful for testing changes on a branch without having to setup explicit staging environments.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/amos-kibet/fly-pr-review-apps.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/amos-kibet/fly-pr-review-apps/issues"
+  },
+  "homepage": "https://github.com/amos-kibet/fly-pr-review-apps#readme",
+  "dependencies": {
+    "@actions/core": "^1.10.0",
+    "@actions/github": "^5.1.1"
+  }
+}
