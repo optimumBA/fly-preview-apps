@@ -16,6 +16,11 @@ RUN mix local.hex --force && mix local.rebar --force
 # set build ENV
 ENV MIX_ENV="prod"
 
+# install mix dependencies
+COPY mix.exs mix.lock ./
+RUN mix deps.get --only $MIX_ENV
+RUN mkdir config
+
 FROM alpine
 
 RUN apk add --no-cache curl jq
