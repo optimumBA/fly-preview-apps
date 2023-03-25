@@ -5,8 +5,8 @@ branding:
   icon: "upload-cloud"
   color: "purple"
 runs:
-  using: "node16"
-  main: "index.js"
+  using: "docker"
+  image: "Dockerfile"
 inputs:
   name:
     description: Fly app name
