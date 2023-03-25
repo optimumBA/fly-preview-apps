@@ -16,6 +16,8 @@ RUN mix local.hex --force && mix local.rebar --force
 # set build ENV
 ENV MIX_ENV="prod"
 
+FROM alpine
+
 RUN apk add --no-cache curl jq
 
 RUN curl -L https://fly.io/install.sh | FLYCTL_INSTALL=/usr/local sh
