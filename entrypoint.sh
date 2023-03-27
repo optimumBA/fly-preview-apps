@@ -72,8 +72,10 @@ if [ -e "rel/overlays/bin/migrate" ]; then
     fi
     # attaching db to the app if it was created successfully
     echo "|> attaching DB ====>>"
-    flyctl postgres attach "$app_db" --app "$app"
+     if $(flyctl postgres attach "$app_db" --app "$app" -y); then
     echo "|> DB attached ====>>"
+    else
+    echo "|> error attaching DB to app ====>>"
   fi
 fi
 
