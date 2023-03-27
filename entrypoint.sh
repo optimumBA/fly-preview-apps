@@ -51,6 +51,9 @@ if ! flyctl status --app "$app"; then
   echo "|> creating app ====>>"
   flyctl launch --no-deploy --copy-config --name "$app" --region "$region" --org "$org"
   echo "|> app created successfully ====>>"
+
+  # Restore the original config file
+  cp "$config.bak" "$config"
 fi
 
 sleep 2
@@ -98,7 +101,6 @@ if flyctl status --app "$app"; then
 fi
 
 # Deploy the app.
-echo "Contents of config $config file: " && cat "$config"
 echo "|> deploying app ====>>"
 flyctl deploy --config "$config" --app "$app" --region "$region" --strategy immediate
 echo "|> app deployed successfuly ====>>"
@@ -112,9 +114,6 @@ echo "|> secrets set successfully ====>>"
 # if [ -n "$INPUT_SECRETS" ]; then
 #   echo $INPUT_SECRETS | tr " " "\n" | flyctl secrets import --app "$app"
 # fi
-
-# Restore the original config file
-cp "$config.bak" "$config"
 
 # Make some info available to the GitHub workflow.
 flyctl status --app "$app" --json >status.json
