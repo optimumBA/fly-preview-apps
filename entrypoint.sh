@@ -52,11 +52,11 @@ if ! flyctl status --app "$app"; then
   flyctl launch --no-deploy --copy-config --name "$app" --region "$region" --org "$org"
   echo "|> app created successfully ====>>"
 
+  sleep 2
+
   # Restore the original config file
   cp "$config.bak" "$config"
 fi
-
-sleep 2
 
 # look for "migrate" file in the app files
 # if it exists, the app probably needs DB.
@@ -66,8 +66,6 @@ if [ -e "rel/overlays/bin/migrate" ]; then
     echo "|> creating DB ====>>"
     flyctl postgres create --name "$app_db" --org "$org" --region "$region" --vm-size shared-cpu-1x --initial-cluster-size 1 --volume-size 10
     echo "|> DB created successfully ====>>"
-
-    sleep 2
 
     # attaching db to the app if it was created successfully
     if flyctl status --app "$app_db"; then
@@ -87,8 +85,6 @@ fi
 # if [[ "$app" =~ "-" ]]; then
 #   volume=${app//-/_}
 # fi
-
-sleep 2
 
 if flyctl status --app "$app"; then
   while IFS= read -r line; do
