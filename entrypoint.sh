@@ -65,18 +65,15 @@ if [ -e "rel/overlays/bin/migrate" ]; then
   if flyctl status --app "$app"; then
     if flyctl status --app "$app_db"; then
       echo "$app_db already exists"
-      exit 1
+    else
+      echo "|> creating DB ====>>"
+      flyctl postgres create --name "$app_db" --org "$org" --region "$region" --vm-size shared-cpu-1x --initial-cluster-size 1 --volume-size 10
+      echo "|> DB created successfully ====>>"
     fi
-    echo "|> creating DB ====>>"
-    flyctl postgres create --name "$app_db" --org "$org" --region "$region" --vm-size shared-cpu-1x --initial-cluster-size 1 --volume-size 10
-    echo "|> DB created successfully ====>>"
-
     # attaching db to the app if it was created successfully
-    if flyctl status --app "$app_db"; then
-      echo "|> attaching DB ====>>"
-      flyctl postgres attach "$app_db" --app "$app"
-      echo "|> DB attached ====>>"
-    fi
+    echo "|> attaching DB ====>>"
+    flyctl postgres attach "$app_db" --app "$app"
+    echo "|> DB attached ====>>"
   fi
 fi
 
