@@ -64,11 +64,15 @@ if ! flyctl status --app "$app"; then
       echo "|> creating DB ====>>"
       flyctl postgres create --name "$app_db" --org "$org" --region "$region" --vm-size shared-cpu-1x --initial-cluster-size 1 --volume-size 10
       echo "|> DB created successfully ====>>"
-      # attach db to the app
-      # attaching db to the app
-      echo "|> attaching DB ====>>"
-      flyctl postgres attach "$APP_DB" --app "$APP"
-      echo "|> DB attached ====>>"
+
+      sleep 2
+
+      # attaching db to the app if it was created successfully
+      if flyctl status --app "$APP_DB"; then
+        echo "|> attaching DB ====>>"
+        flyctl postgres attach "$APP_DB" --app "$APP"
+        echo "|> DB attached ====>>"
+      fi
     fi
   fi
 
@@ -81,6 +85,8 @@ if ! flyctl status --app "$app"; then
   # if [[ "$app" =~ "-" ]]; then
   #   volume=${app//-/_}
   # fi
+
+  sleep 2
 
   while IFS= read -r line; do
     if [[ $line == "[mounts]" ]]; then
