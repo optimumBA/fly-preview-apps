@@ -52,43 +52,45 @@ if ! flyctl status --app "$app"; then
   flyctl launch --no-deploy --copy-config --name "$app" --region "$region" --org "$org"
   echo "|> app created successfully ====>>"
 
-  sleep 2
-
   # Restore the original config file
   cp "$config.bak" "$config"
+fi
 
-  # look for "migrate" file in the app files
-  # if it exists, the app probably needs DB.
-  if [ -e "rel/overlays/bin/migrate" ]; then
-    # only create db if the app lauched successfully
-    if flyctl status --app "$APP"; then
-      echo "|> creating DB ====>>"
-      flyctl postgres create --name "$app_db" --org "$org" --region "$region" --vm-size shared-cpu-1x --initial-cluster-size 1 --volume-size 10
-      echo "|> DB created successfully ====>>"
+sleep 2
 
-      sleep 2
+# look for "migrate" file in the app files
+# if it exists, the app probably needs DB.
+if [ -e "rel/overlays/bin/migrate" ]; then
+  # only create db if the app lauched successfully
+  if flyctl status --app "$APP"; then
+    echo "|> creating DB ====>>"
+    flyctl postgres create --name "$app_db" --org "$org" --region "$region" --vm-size shared-cpu-1x --initial-cluster-size 1 --volume-size 10
+    echo "|> DB created successfully ====>>"
 
-      # attaching db to the app if it was created successfully
-      if flyctl status --app "$APP_DB"; then
-        echo "|> attaching DB ====>>"
-        flyctl postgres attach "$APP_DB" --app "$APP"
-        echo "|> DB attached ====>>"
-      fi
+    sleep 2
+
+    # attaching db to the app if it was created successfully
+    if flyctl status --app "$APP_DB"; then
+      echo "|> attaching DB ====>>"
+      flyctl postgres attach "$APP_DB" --app "$APP"
+      echo "|> DB attached ====>>"
     fi
   fi
+fi
 
-  # find a way to determine if the app requires volumes
-  # basically, scan the config file if it contains "[mounts]", then create a volume for it
-  # for now, we're just gonna create it anyway
-  #
-  # check if app name has dashes, and replace with underscore
-  # Fly.io does not accept dashes in volume names
-  # if [[ "$app" =~ "-" ]]; then
-  #   volume=${app//-/_}
-  # fi
+# find a way to determine if the app requires volumes
+# basically, scan the config file if it contains "[mounts]", then create a volume for it
+# for now, we're just gonna create it anyway
+#
+# check if app name has dashes, and replace with underscore
+# Fly.io does not accept dashes in volume names
+# if [[ "$app" =~ "-" ]]; then
+#   volume=${app//-/_}
+# fi
 
-  sleep 2
+sleep 2
 
+if flyctl status --app "$APP"; then
   while IFS= read -r line; do
     if [[ $line == "[mounts]" ]]; then
       echo "|> creating volume ====>>"
