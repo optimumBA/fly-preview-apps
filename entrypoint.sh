@@ -51,6 +51,8 @@ if ! flyctl status --app "$app"; then
   flyctl launch --no-deploy --copy-config --name "$app" --region "$region" --org "$org"
   echo "|> app created successfully ====>>"
 
+  sleep 2
+
   # Restore the original config file
   cp "$config.bak" "$config"
 
@@ -83,7 +85,7 @@ if ! flyctl status --app "$app"; then
   while IFS= read -r line; do
     if [[ $line == "[mounts]" ]]; then
       echo "|> creating volume ====>>"
-      fly volumes create temporary_volume --app "$app" --region "$region"
+      fly volumes create temporary_volume --app "$app" --region "$region" --size 1
       echo "|> volume created successfully ====>>"
     fi
   done <"$config"
