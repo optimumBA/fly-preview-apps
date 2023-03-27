@@ -39,6 +39,7 @@ if [ "$EVENT_TYPE" = "closed" ]; then
   fi
   # destroy created volumes
   # flyctl volumes destroy <id> -y || true
+  exit 0
 fi
 
 # Check if app exists,
