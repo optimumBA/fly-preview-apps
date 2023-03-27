@@ -59,7 +59,7 @@ sleep 2
 # if it exists, the app probably needs DB.
 if [ -e "rel/overlays/bin/migrate" ]; then
   # only create db if the app lauched successfully
-  if flyctl status --app "$APP"; then
+  if flyctl status --app "$app"; then
     echo "|> creating DB ====>>"
     flyctl postgres create --name "$app_db" --org "$org" --region "$region" --vm-size shared-cpu-1x --initial-cluster-size 1 --volume-size 10
     echo "|> DB created successfully ====>>"
@@ -67,9 +67,9 @@ if [ -e "rel/overlays/bin/migrate" ]; then
     sleep 2
 
     # attaching db to the app if it was created successfully
-    if flyctl status --app "$APP_DB"; then
+    if flyctl status --app "$app_db"; then
       echo "|> attaching DB ====>>"
-      flyctl postgres attach "$APP_DB" --app "$APP"
+      flyctl postgres attach "$app_db" --app "$app"
       echo "|> DB attached ====>>"
     fi
   fi
@@ -87,7 +87,7 @@ fi
 
 sleep 2
 
-if flyctl status --app "$APP"; then
+if flyctl status --app "$app"; then
   while IFS= read -r line; do
     if [[ $line == "[mounts]" ]]; then
       echo "|> creating volume ====>>"
