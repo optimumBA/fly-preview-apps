@@ -109,7 +109,7 @@ fly secrets set PHX_HOST="$APP".fly.dev --app "$APP"
 echo "|> secrets set successfully ====>>"
 
 # Restore the original config file
-cp "$config.bak" "$config"
+cp "$CONFIG.bak" "$CONFIG"
 
 # import any environment secrets that may be required
 if [ -n "$INPUT_SECRETS" ]; then
