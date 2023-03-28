@@ -35,6 +35,7 @@ if [ "$EVENT_TYPE" = "closed" ]; then
 
   # destroy postgres db as well
   if flyctl status --app "$APP_DB"; then
+    flyctl postgres detach "$APP_DB" --app "$APP" -y || true
     flyctl apps destroy "$APP_DB" -y || true
   fi
   # destroy created volumes
@@ -50,9 +51,9 @@ cp "$CONFIG" "$CONFIG.bak"
 # if not, launch it, but don't deploy yet
 if ! flyctl status --app "$APP"; then
 
-  echo "|> creating $APP ====>>"
+  echo "|> creating $APP app ====>>"
   flyctl launch --no-deploy --copy-config --name "$APP" --region "$REGION" --org "$ORG"
-  echo "|> $APP created successfully ====>>"
+  echo "|> $APP app created successfully ====>>"
 fi
 
 # look for "migrate" file in the app files
@@ -61,18 +62,18 @@ if [ -e "rel/overlays/bin/migrate" ]; then
   # only create db if the app lauched successfully
   if flyctl status --app "$APP"; then
     if flyctl status --app "$APP_DB"; then
-      echo "$APP_DB already exists"
+      echo "$APP_DB DB already exists"
     else
       echo "|> creating $APP_DB DB ====>>"
       flyctl postgres create --name "$APP_DB" --org "$ORG" --region "$REGION" --vm-size shared-cpu-1x --initial-cluster-size 1 --volume-size 10
-      echo "|> $APP_ID DB created successfully ====>>"
+      echo "|> $APP_DB DB created successfully ====>>"
     fi
     # attaching db to the app if it was created successfully
-    echo "|> attaching DB ====>>"
-    if $(flyctl postgres attach "$APP_DB" --app "$APP" -y); then
-      echo "|> DB attached ====>>"
+    echo "|> attaching $APP_DB DB ====>>"
+    if flyctl postgres attach "$APP_DB" --app "$APP" -y; then
+      echo "|> $APP_DB DB attached ====>>"
     else
-      echo "|> error attaching DB to app ====>>"
+      echo "|> error attaching $APP_DB to $APP, attachments exist ====>>"
     fi
   fi
 fi
@@ -86,9 +87,9 @@ fi
 VOLUME=$(echo $APP | tr '-' '_')
 
 if grep -q "\[mounts\]" fly.toml; then
-  echo "|> creating volume ====>>"
-  fly volumes create $VOLUME --app "$APP" --region "$REGION" --size 10
-  echo "|> volume created successfully ====>>"
+  echo "|> creating $VOLUME volume ====>>"
+  fly volumes create $VOLUME --app "$APP" --region "$REGION" --size 1
+  echo "|> $VOLUME volume created successfully ====>>"
 
   # modify config file to have the volume name specified above.
   echo "|> updating config to contain new volume name ====>>"
@@ -99,9 +100,9 @@ if grep -q "\[mounts\]" fly.toml; then
 fi
 
 # Deploy the app.
-echo "|> deploying app ====>>"
+echo "|> deploying $APP app ====>>"
 flyctl deploy --config "$CONFIG" --app "$APP" --region "$REGION" --strategy immediate
-echo "|> app deployed successfuly ====>>"
+echo "|> $APP app deployed successfuly ====>>"
 
 # set neccessary secrets
 echo "|> setting secrets ====>>"
