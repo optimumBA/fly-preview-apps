@@ -44,7 +44,7 @@ fi
 
 # Backup the original config file since 'flyctl launch' messes up the [build.args] section
 # also, sources value under mounts is modified, for apps that require volumes
-cp "$config" "$config.bak"
+cp "$CONFIG" "$CONFIG.bak"
 
 # Check if app exists,
 # if not, launch it, but don't deploy yet
