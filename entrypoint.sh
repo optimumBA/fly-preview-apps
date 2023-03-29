@@ -46,7 +46,7 @@ if [ "$EVENT_TYPE" = "closed" ]; then
     echo "|> $APP_DB destroyed successfully ====>>"
   fi
 
-  # finally destroy the app
+  # finally, destroy the app
   if flyctl status --app "$APP"; then
     echo "|> destroying $APP ====>>"
     flyctl apps destroy "$APP" -y || true
@@ -77,7 +77,7 @@ if [ -e "rel/overlays/bin/migrate" ]; then
       echo "$APP_DB DB already exists"
     else
       echo "|> creating $APP_DB DB ====>>"
-      flyctl postgres create --name "$APP_DB" --org "$ORG" --region "$REGION" --vm-size shared-cpu-1x --initial-cluster-size 1 --volume-size 10
+      flyctl postgres create --name "$APP_DB" --org "$ORG" --region "$REGION" --vm-size shared-cpu-1x --initial-cluster-size 4 --volume-size 10
       echo "|> $APP_DB DB created successfully ====>>"
     fi
     # attaching db to the app if it was created successfully
