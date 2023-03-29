@@ -31,15 +31,27 @@ fi
 
 # PR was closed - remove the Fly app if one exists and exit.
 if [ "$EVENT_TYPE" = "closed" ]; then
-  flyctl apps destroy "$APP" -y || true
-
-  # destroy postgres db as well
+  # destroy app DB
   if flyctl status --app "$APP_DB"; then
-    flyctl postgres detach "$APP_DB" --app "$APP" -y || true
+    echo "|> destroying $APP_DB ====>>"
     flyctl apps destroy "$APP_DB" -y || true
+    echo "|> $APP_DB destroyed successfully ====>>"
   fi
-  # destroy created volumes
-  # flyctl volumes destroy <id> -y || true
+
+  # destroy associated volumes as well
+  if flyctl volumes list --app "$APP"; then
+    VOLUME_ID=$(flyctl volumes list --app "$APP" | grep -oh "\w*vol_\w*")
+    echo "|> destroying $APP_DB volumes ====>>"
+    flyctl apps destroy "$VOLUME_ID" -y || true
+    echo "|> $APP_DB destroyed successfully ====>>"
+  fi
+
+  # finally destroy the app
+  if flyctl status --app "$APP"; then
+    echo "|> destroying $APP ====>>"
+    flyctl apps destroy "$APP" -y || true
+    echo "|> $APP destroyed successfully====>>"
+  fi
   exit 0
 fi
 
@@ -87,16 +99,19 @@ fi
 VOLUME=$(echo $APP | tr '-' '_')
 
 if grep -q "\[mounts\]" fly.toml; then
-  echo "|> creating $VOLUME volume ====>>"
-  fly volumes create $VOLUME --app "$APP" --region "$REGION" --size 1
-  echo "|> $VOLUME volume created successfully ====>>"
+  # create volume only if none exists
+  if ! flyctl volumes list --app "$APP" | grep -oh "\w*vol_\w*"; then
+    echo "|> creating $VOLUME volume ====>>"
+    flyctl volumes create "$VOLUME" --app "$APP" --region "$REGION" --size 10 -y
+    echo "|> $VOLUME volume created successfully ====>>"
 
-  # modify config file to have the volume name specified above.
-  echo "|> updating config to contain new volume name ====>>"
+    # modify config file to have the volume name specified above.
+    echo "|> updating config to contain new volume name ====>>"
 
-  # modify config file to have the volume name specified above.
-  sed -i -e 's/source =.*/source = '\"$VOLUME\"'/' "$CONFIG"
-  echo "|> config modified to contain new volume name ====>>"
+    # modify config file to have the volume name specified above.
+    sed -i -e 's/source =.*/source = '\"$VOLUME\"'/' "$CONFIG"
+    echo "|> config modified to contain new volume name ====>>"
+  fi
 fi
 
 # Deploy the app.
@@ -109,13 +124,13 @@ echo "|> setting secrets ====>>"
 fly secrets set PHX_HOST="$APP".fly.dev --app "$APP"
 echo "|> secrets set successfully ====>>"
 
-# Restore the original config file
-cp "$CONFIG.bak" "$CONFIG"
-
 # import any environment secrets that may be required
 if [ -n "$INPUT_SECRETS" ]; then
   echo $INPUT_SECRETS | tr " " "\n" | flyctl secrets import --app "$APP"
 fi
+
+# Restore the original config file
+cp "$CONFIG.bak" "$CONFIG"
 
 # Make some info available to the GitHub workflow.
 flyctl status --app "$APP" --json >status.json
