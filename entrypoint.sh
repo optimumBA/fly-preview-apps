@@ -7,6 +7,14 @@ if [ -n "$INPUT_PATH" ]; then
   cd "$INPUT_PATH" || exit
 fi
 
+# Default the Fly app name to pr-{number}-{repo_name}
+APP="${INPUT_NAME:-pr-$PR_NUMBER-$REPO_NAME}"
+APP_DB="$APP-db"
+REGION="${INPUT_REGION:-${FLY_REGION:-iad}}"
+ORG="${INPUT_ORG:-${FLY_ORG:-personal}}"
+IMAGE="$INPUT_IMAGE"
+CONFIG="${INPUT_CONFIG:-fly.toml}"
+
 PR_NUMBER=$(jq -r .number /github/workflow/event.json)
 if [ -z "$PR_NUMBER" ]; then
   echo "This action only supports pull_request actions."
@@ -16,13 +24,13 @@ fi
 REPO_NAME=$(echo $GITHUB_REPOSITORY | tr "/" "-")
 EVENT_TYPE=$(jq -r .action /github/workflow/event.json)
 
-# Default the Fly app name to pr-{number}-{repo_name}
-APP="${INPUT_NAME:-pr-$PR_NUMBER-$REPO_NAME}"
-APP_DB="$APP-db"
-REGION="${INPUT_REGION:-${FLY_REGION:-iad}}"
-ORG="${INPUT_ORG:-${FLY_ORG:-personal}}"
-IMAGE="$INPUT_IMAGE"
-CONFIG="${INPUT_CONFIG:-fly.toml}"
+# replace any dash with underscore in app name
+# fly.io does not accept dashes in volume names
+VOLUME=$(echo $APP | tr '-' '_')
+
+# Backup the original config file since 'flyctl launch' messes up the [build.args] section
+# also, sources value under [mounts] is modified, for apps that require volumes
+cp "$CONFIG" "$CONFIG.bak"
 
 if ! echo "$APP" | grep "$PR_NUMBER"; then
   echo "For safety, this action requires the app's name to contain the PR number."
@@ -39,7 +47,7 @@ if [ "$EVENT_TYPE" = "closed" ]; then
   # destroy associated volumes as well
   if flyctl volumes list --app "$APP"; then
     VOLUME_ID=$(flyctl volumes list --app "$APP" | grep -oh "\w*vol_\w*")
-    flyctl apps destroy "$VOLUME_ID" -y || true
+    flyctl volumes destroy "$VOLUME_ID" -y || true
   fi
 
   # finally, destroy the app
@@ -49,70 +57,49 @@ if [ "$EVENT_TYPE" = "closed" ]; then
   exit 0
 fi
 
-# Backup the original config file since 'flyctl launch' messes up the [build.args] section
-# also, sources value under mounts is modified, for apps that require volumes
-cp "$CONFIG" "$CONFIG.bak"
-
 # Check if app exists,
 # if not, launch it, but don't deploy yet
 if ! flyctl status --app "$APP"; then
-  flyctl launch --no-deploy --copy-config --name "$APP" --region "$REGION" --org "$ORG"
-fi
+  flyctl launch --detach --no-deploy --copy-config --name "$APP" --region "$REGION" --org "$ORG"
 
-# look for "migrate" file in the app files
-# if it exists, the app probably needs DB.
-if [ -e "rel/overlays/bin/migrate" ]; then
-  # only create db if the app lauched successfully
-  if flyctl status --app "$APP"; then
-    if flyctl status --app "$APP_DB"; then
-      echo "$APP_DB DB already exists"
-    else
-      flyctl postgres create --name "$APP_DB" --org "$ORG" --region "$REGION" --vm-size shared-cpu-1x --initial-cluster-size 4 --volume-size 1
+  sleep 2
+
+  # look for "migrate" file in the app files
+  # if it exists, the app probably needs DB.
+  if [ -e "rel/overlays/bin/migrate" ]; then
+    # only create db if the app lauched successfully
+    if flyctl status --app "$APP"; then
+      if flyctl status --app "$APP_DB"; then
+        echo "$APP_DB DB already exists"
+      else
+        flyctl postgres create --name "$APP_DB" --org "$ORG" --region "$REGION" --vm-size shared-cpu-1x --initial-cluster-size 4 --volume-size 1
+      fi
+      # attaching db to the app if it was created successfully
+      if flyctl postgres attach "$APP_DB" --app "$APP" -y; then
+        echo "$APP_DB DB attached ====>>"
+      else
+        echo "Error attaching $APP_DB to $APP, attachments exist ====>>"
+      fi
     fi
-    # attaching db to the app if it was created successfully
-    if flyctl postgres attach "$APP_DB" --app "$APP" -y; then
-      echo "$APP_DB DB attached"
-    else
-      echo "Error attaching $APP_DB to $APP, attachments exist"
+  fi
+
+  # find a way to determine if the app requires volumes
+  # basically, scan the config file if it contains "[mounts]", then create a volume for it
+  if grep -q "\[mounts\]" fly.toml; then
+    # create volume only if none exists
+    if ! flyctl volumes list --app "$APP" | grep -oh "\w*vol_\w*"; then
+      flyctl volumes create "$VOLUME" --app "$APP" --region "$REGION" --size 1 -y
     fi
   fi
 fi
 
-# find a way to determine if the app requires volumes
-# basically, scan the config file if it contains "[mounts]", then create a volume for it
-# for now, we're just gonna create it anyway
-#
-# replace any dash with underscore in app name
-# Fly.io does not accept dashes in volume names
-VOLUME=$(echo $APP | tr '-' '_')
-
-if grep -q "\[mounts\]" fly.toml; then
-  # create volume only if none exists
-  if ! flyctl volumes list --app "$APP" | grep -oh "\w*vol_\w*"; then
-    flyctl volumes create "$VOLUME" --app "$APP" --region "$REGION" --size 1 -y
-
-    # modify config file to have the volume name specified above.
-    echo "Updating config to contain new volume name"
-
-    # modify config file to have the volume name specified above.
-    sed -i -e 's/source =.*/source = '\"$VOLUME\"'/' "$CONFIG"
-    echo "Config file modified to contain new volume name"
-  fi
-fi
+# modify config file to have the volume name specified above.
+sed -i -e 's/source =.*/source = '\"$VOLUME\"'/' "$CONFIG"
 
 # Deploy the app.
 flyctl deploy --config "$CONFIG" --app "$APP" --region "$REGION" --strategy immediate
 
-# set neccessary secrets
-fly secrets set PHX_HOST="$APP".fly.dev --app "$APP"
-
-# import any environment secrets that may be required
-if [ -n "$INPUT_SECRETS" ]; then
-  echo $INPUT_SECRETS | tr " " "\n" | flyctl secrets import --app "$APP"
-fi
-
 # Restore the original config file
-echo "Restore the original config file"
 cp "$CONFIG.bak" "$CONFIG"
 
 # Make some info available to the GitHub workflow.
