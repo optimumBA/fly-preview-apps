@@ -1,4 +1,4 @@
-FROM alpine
+FROM elixir:1.13.4-otp-25-alpine
 
 RUN apk add --no-cache curl jq
 
