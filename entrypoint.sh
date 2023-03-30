@@ -7,14 +7,6 @@ if [ -n "$INPUT_PATH" ]; then
   cd "$INPUT_PATH" || exit
 fi
 
-# Default the Fly app name to pr-{number}-{repo_name}
-APP="${INPUT_NAME:-pr-$PR_NUMBER-$REPO_NAME}"
-APP_DB="$APP-db"
-REGION="${INPUT_REGION:-${FLY_REGION:-iad}}"
-ORG="${INPUT_ORG:-${FLY_ORG:-personal}}"
-IMAGE="$INPUT_IMAGE"
-CONFIG="${INPUT_CONFIG:-fly.toml}"
-
 PR_NUMBER=$(jq -r .number /github/workflow/event.json)
 if [ -z "$PR_NUMBER" ]; then
   echo "This action only supports pull_request actions."
@@ -22,7 +14,16 @@ if [ -z "$PR_NUMBER" ]; then
 fi
 
 REPO_NAME=$(echo $GITHUB_REPOSITORY | tr "/" "-")
+
 EVENT_TYPE=$(jq -r .action /github/workflow/event.json)
+
+# Default the Fly app name to pr-{number}-{repo_name}
+APP="${INPUT_NAME:-pr-$PR_NUMBER-$REPO_NAME}"
+APP_DB="$APP-db"
+REGION="${INPUT_REGION:-${FLY_REGION:-iad}}"
+ORG="${INPUT_ORG:-${FLY_ORG:-personal}}"
+IMAGE="$INPUT_IMAGE"
+CONFIG="${INPUT_CONFIG:-fly.toml}"
 
 # replace any dash with underscore in app name
 # fly.io does not accept dashes in volume names
