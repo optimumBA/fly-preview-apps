@@ -1,4 +1,4 @@
-FROM elixir:1.13.4-otp-25-alpine
+FROM bitwalker/alpine-elixir:latest
 
 RUN apk add --no-cache curl jq
 
