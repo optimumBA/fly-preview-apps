@@ -61,7 +61,7 @@ fi
 # Check if app exists,
 # if not, launch it, but don't deploy yet
 if ! flyctl status --app "$APP"; then
-  flyctl launch --detach --no-deploy --copy-config --name "$APP" --region "$REGION" --org "$ORG"
+  flyctl launch --no-deploy --copy-config --name "$APP" --region "$REGION" --org "$ORG"
 
   sleep 2
 
@@ -90,12 +90,12 @@ if ! flyctl status --app "$APP"; then
     # create volume only if none exists
     if ! flyctl volumes list --app "$APP" | grep -oh "\w*vol_\w*"; then
       flyctl volumes create "$VOLUME" --app "$APP" --region "$REGION" --size 1 -y
+
+      # modify config file to have the volume name specified above.
+      sed -i -e 's/source =.*/source = '\"$VOLUME\"'/' "$CONFIG"
     fi
   fi
 fi
-
-# modify config file to have the volume name specified above.
-sed -i -e 's/source =.*/source = '\"$VOLUME\"'/' "$CONFIG"
 
 # Deploy the app.
 flyctl deploy --config "$CONFIG" --app "$APP" --region "$REGION" --strategy immediate
