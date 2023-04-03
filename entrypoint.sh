@@ -46,7 +46,7 @@ if [ "$EVENT_TYPE" = "closed" ]; then
   fi
 
   # destroy associated volumes as well
-  if flyctl volumes list --app "$APP"; then
+  if flyctl volumes list --app "$APP" | grep -oh "\w*vol_\w*"; then
     VOLUME_ID=$(flyctl volumes list --app "$APP" | grep -oh "\w*vol_\w*")
     flyctl volumes destroy "$VOLUME_ID" -y || true
   fi
