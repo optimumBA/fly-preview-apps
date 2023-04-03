@@ -77,16 +77,16 @@ if ! flyctl status --app "$APP"; then
       fi
       # attaching db to the app if it was created successfully
       if flyctl postgres attach "$APP_DB" --app "$APP" -y; then
-        echo "$APP_DB DB attached ====>>"
+        echo "$APP_DB DB attached to $APP"
       else
-        echo "Error attaching $APP_DB to $APP, attachments exist ====>>"
+        echo "Error attaching $APP_DB to $APP, attachments exist"
       fi
     fi
   fi
 
   # find a way to determine if the app requires volumes
   # basically, scan the config file if it contains "[mounts]", then create a volume for it
-  if grep -q "\[mounts\]" fly.toml; then
+  if grep -q "\[mounts\]" "$CONFIG"; then
     # create volume only if none exists
     if ! flyctl volumes list --app "$APP" | grep -oh "\w*vol_\w*"; then
       flyctl volumes create "$VOLUME" --app "$APP" --region "$REGION" --size 1 -y
@@ -95,6 +95,11 @@ if ! flyctl status --app "$APP"; then
       sed -i -e 's/source =.*/source = '\"$VOLUME\"'/' "$CONFIG"
     fi
   fi
+fi
+
+# Import any required secrets
+if [ -n "$INPUT_SECRETS" ]; then
+  echo $INPUT_SECRETS | tr " " "\n" | flyctl secrets import --app "$APP"
 fi
 
 # Deploy the app.
