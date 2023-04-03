@@ -84,17 +84,17 @@ if ! flyctl status --app "$APP"; then
     fi
   fi
 
-  # find a way to determine if the app requires volumes
-  # basically, scan the config file if it contains "[mounts]", then create a volume for it
-  if grep -q "\[mounts\]" "$CONFIG"; then
-    # create volume only if none exists
-    if ! flyctl volumes list --app "$APP" | grep -oh "\w*vol_\w*"; then
-      flyctl volumes create "$VOLUME" --app "$APP" --region "$REGION" --size 1 -y
+fi
 
-      # modify config file to have the volume name specified above.
-      sed -i -e 's/source =.*/source = '\"$VOLUME\"'/' "$CONFIG"
-    fi
+# find a way to determine if the app requires volumes
+# basically, scan the config file if it contains "[mounts]", then create a volume for it
+if grep -q "\[mounts\]" "$CONFIG"; then
+  # create volume only if none exists
+  if ! flyctl volumes list --app "$APP" | grep -oh "\w*vol_\w*"; then
+    flyctl volumes create "$VOLUME" --app "$APP" --region "$REGION" --size 1 -y
   fi
+  # modify config file to have the volume name specified above.
+  sed -i -e 's/source =.*/source = '\"$VOLUME\"'/' "$CONFIG"
 fi
 
 # Import any required secrets
