@@ -24,6 +24,7 @@ REGION="${INPUT_REGION:-${FLY_REGION:-iad}}"
 ORG="${INPUT_ORG:-${FLY_ORG:-personal}}"
 IMAGE="$INPUT_IMAGE"
 CONFIG="${INPUT_CONFIG:-fly.toml}"
+VOLUME_ID=$(flyctl volumes list --app "$APP" | grep -oh "\w*vol_\w*")
 
 # replace any dash with underscore in app name
 # fly.io does not accept dashes in volume names
@@ -46,8 +47,7 @@ if [ "$EVENT_TYPE" = "closed" ]; then
   fi
 
   # destroy associated volumes as well
-  if flyctl volumes list --app "$APP" | grep -oh "\w*vol_\w*"; then
-    VOLUME_ID=$(flyctl volumes list --app "$APP" | grep -oh "\w*vol_\w*")
+  if [[ -n "$VOLUME_ID" ]]; then
     flyctl volumes destroy "$VOLUME_ID" -y || true
   fi
 
@@ -73,7 +73,7 @@ if ! flyctl status --app "$APP"; then
       if flyctl status --app "$APP_DB"; then
         echo "$APP_DB DB already exists"
       else
-        flyctl postgres create --name "$APP_DB" --org "$ORG" --region "$REGION" --vm-size shared-cpu-1x --initial-cluster-size 4 --volume-size 1
+        flyctl postgres create --name "$APP_DB" --org "$ORG" --region "$REGION" --vm-size shared-cpu-1x --initial-cluster-size 1 --volume-size 1
       fi
       # attaching db to the app if it was created successfully
       if flyctl postgres attach "$APP_DB" --app "$APP" -y; then
@@ -90,7 +90,7 @@ fi
 # basically, scan the config file if it contains "[mounts]", then create a volume for it
 if grep -q "\[mounts\]" "$CONFIG"; then
   # create volume only if none exists
-  if ! flyctl volumes list --app "$APP" | grep -oh "\w*vol_\w*"; then
+  if [[ -z "$VOLUME_ID" ]]; then
     flyctl volumes create "$VOLUME" --app "$APP" --region "$REGION" --size 1 -y
   fi
   # modify config file to have the volume name specified above.
