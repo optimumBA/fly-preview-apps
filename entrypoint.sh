@@ -24,7 +24,6 @@ REGION="${INPUT_REGION:-${FLY_REGION:-iad}}"
 ORG="${INPUT_ORG:-${FLY_ORG:-personal}}"
 IMAGE="$INPUT_IMAGE"
 CONFIG="${INPUT_CONFIG:-fly.toml}"
-VOLUME_ID=$(flyctl volumes list --app "$APP" | grep -oh "\w*vol_\w*")
 
 # replace any dash with underscore in app name
 # fly.io does not accept dashes in volume names
@@ -41,14 +40,14 @@ fi
 
 # PR was closed - remove the Fly app if one exists and exit.
 if [ "$EVENT_TYPE" = "closed" ]; then
-  # destroy app DB
-  if flyctl status --app "$APP_DB"; then
-    flyctl apps destroy "$APP_DB" -y || true
-  fi
-
-  # destroy associated volumes as well
+  VOLUME_ID=$(flyctl volumes list --app "$APP" | grep -oh "\w*vol_\w*")
+  # destroy app volume
   if [[ -n "$VOLUME_ID" ]]; then
     flyctl volumes destroy "$VOLUME_ID" -y || true
+  fi
+  # destroy app DB as well
+  if flyctl status --app "$APP_DB"; then
+    flyctl apps destroy "$APP_DB" -y || true
   fi
 
   # finally, destroy the app
@@ -90,7 +89,7 @@ fi
 # basically, scan the config file if it contains "[mounts]", then create a volume for it
 if grep -q "\[mounts\]" "$CONFIG"; then
   # create volume only if none exists
-  if [[ -z "$VOLUME_ID" ]]; then
+  if ! flyctl volumes list --app "$APP" | grep -oh "\w*vol_\w*"; then
     flyctl volumes create "$VOLUME" --app "$APP" --region "$REGION" --size 1 -y
   fi
   # modify config file to have the volume name specified above.
