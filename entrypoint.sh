@@ -40,14 +40,19 @@ fi
 
 # PR was closed - remove the Fly app if one exists and exit.
 if [ "$EVENT_TYPE" = "closed" ]; then
-  VOLUME_ID=$(flyctl volumes list --app "$APP" | grep -oh "\w*vol_\w*")
-  # destroy app volume
-  if [[ -n "$VOLUME_ID" ]]; then
-    flyctl volumes destroy "$VOLUME_ID" -y || true
-  fi
-  # destroy app DB as well
+  # destroy app DB
   if flyctl status --app "$APP_DB"; then
     flyctl apps destroy "$APP_DB" -y || true
+  fi
+
+  # destroy associated volumes as well
+  # @TODO: refactor code below to avoid repeting running `flyctl volumes list ...`
+  # we could declare a variable as below:
+  #   VOLUME_ID=$(flyctl volumes list --app "$APP" | grep -oh "\w*vol_\w*")
+  # but in the case where VOLUME_ID is an empty string (no volume), GitHub action runner throws an error
+  if flyctl volumes list --app "$APP" | grep -oh "\w*vol_\w*"; then
+    VOLUME_ID=$(flyctl volumes list --app "$APP" | grep -oh "\w*vol_\w*")
+    flyctl volumes destroy "$VOLUME_ID" -y || true
   fi
 
   # finally, destroy the app
