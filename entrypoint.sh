@@ -29,10 +29,6 @@ CONFIG="${INPUT_CONFIG:-fly.toml}"
 # fly.io does not accept dashes in volume names
 VOLUME=$(echo $APP | tr '-' '_')
 
-# Backup the original config file since 'flyctl launch' messes up the [build.args] section
-# also, sources value under [mounts] is modified, for apps that require volumes
-cp "$CONFIG" "$CONFIG.bak"
-
 if ! echo "$APP" | grep "$PR_NUMBER"; then
   echo "For safety, this action requires the app's name to contain the PR number."
   exit 1
@@ -46,9 +42,8 @@ if [ "$EVENT_TYPE" = "closed" ]; then
   fi
 
   # destroy associated volumes as well
-  # @TODO: refactor code below to avoid repeting running `flyctl volumes list ...`
-  # we could declare a variable as below:
-  #   VOLUME_ID=$(flyctl volumes list --app "$APP" | grep -oh "\w*vol_\w*")
+  # @TODO: refactor code below to avoid repeatedly running `flyctl volumes list ...`
+  # we could declare the variable in line 49 outside the if block, then reuse it inside the block,
   # but in the case where VOLUME_ID is an empty string (no volume), GitHub action runner throws an error
   if flyctl volumes list --app "$APP" | grep -oh "\w*vol_\w*"; then
     VOLUME_ID=$(flyctl volumes list --app "$APP" | grep -oh "\w*vol_\w*")
@@ -66,8 +61,6 @@ fi
 # if not, launch it, but don't deploy yet
 if ! flyctl status --app "$APP"; then
   flyctl launch --no-deploy --copy-config --name "$APP" --region "$REGION" --org "$ORG"
-
-  sleep 2
 
   # look for "migrate" file in the app files
   # if it exists, the app probably needs DB.
@@ -108,9 +101,6 @@ fi
 
 # Deploy the app.
 flyctl deploy --config "$CONFIG" --app "$APP" --region "$REGION" --strategy immediate
-
-# Restore the original config file
-cp "$CONFIG.bak" "$CONFIG"
 
 # Make some info available to the GitHub workflow.
 flyctl status --app "$APP" --json >status.json
