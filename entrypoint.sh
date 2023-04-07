@@ -18,7 +18,7 @@ REPO_NAME=$(echo $GITHUB_REPOSITORY | tr "/" "-")
 EVENT_TYPE=$(jq -r .action /github/workflow/event.json)
 
 # Default the Fly app name to pr-{number}-{repo_name}
-APP="${INPUT_NAME:-pr-$PR_NUMBER-$REPO_NAME}"
+APP=$(echo "${INPUT_NAME:-pr-$PR_NUMBER-$REPO_NAME}" | tr '_' '-')
 APP_DB="$APP-db"
 REGION="${INPUT_REGION:-${FLY_REGION:-iad}}"
 ORG="${INPUT_ORG:-${FLY_ORG:-personal}}"
