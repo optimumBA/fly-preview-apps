@@ -1,4 +1,4 @@
-FROM bitwalker/alpine-elixir:latest
+FROM alpine
 
 RUN apk add --no-cache curl jq
 
