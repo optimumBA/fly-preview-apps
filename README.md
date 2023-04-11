@@ -8,8 +8,6 @@ If you have an existing `fly.toml` in your repo, this action will copy it with a
 
 ## Inputs
 
-### TODO: Update this section, some fields are no longer needed
-
 | name      | description                                                                                                                                                                                   |
 | --------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `name`    | The name of the Fly app. Alternatively, set the env `FLY_APP`. For safety, must include the PR number. Example: `myapp-pr-${{ github.event.number }}`. Defaults to `pr-{number}-{repo_name}`. |
