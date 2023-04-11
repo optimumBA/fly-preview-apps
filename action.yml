@@ -25,3 +25,7 @@ inputs:
     default: true
   secrets:
     description: Secrets to be set on the app. Separate multiple secrets with a space.
+  vm:
+    description: Changes the type of the VM. Defaults to shared-cpu-1x.
+  vm_memory:
+    description: Adjusts VM's memory. Default to 256.

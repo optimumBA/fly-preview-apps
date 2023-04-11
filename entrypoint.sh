@@ -24,6 +24,8 @@ REGION="${INPUT_REGION:-${FLY_REGION:-iad}}"
 ORG="${INPUT_ORG:-${FLY_ORG:-personal}}"
 IMAGE="$INPUT_IMAGE"
 CONFIG="${INPUT_CONFIG:-fly.toml}"
+VM="${INPUT_VM:-shared-cpu-1x}"
+VM_MEMORY="${INPUT_VM_MEMORY:-256}"
 
 # replace any dash with underscore in app name
 # fly.io does not accept dashes in volume names
@@ -61,6 +63,7 @@ fi
 # if not, launch it, but don't deploy yet
 if ! flyctl status --app "$APP"; then
   flyctl apps create "$APP" --org "$ORG"
+  flyctl scale vm "$VM" --memory "$VM_MEMORY" --app "$APP"
 
   # look for "migrate" file in the app files
   # if it exists, the app probably needs DB.
@@ -80,7 +83,6 @@ if ! flyctl status --app "$APP"; then
       fi
     fi
   fi
-
 fi
 
 # find a way to determine if the app requires volumes
