@@ -102,7 +102,7 @@ if [ -n "$INPUT_SECRETS" ]; then
 fi
 
 # Deploy the app.
-flyctl deploy --config "$CONFIG" --app "$APP" --region "$REGION" --strategy immediate
+flyctl deploy --config "$CONFIG" --app "$APP" --region "$REGION" --remote-only --strategy immediate
 
 # Make some info available to the GitHub workflow.
 flyctl status --app "$APP" --json >status.json
