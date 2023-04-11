@@ -19,7 +19,10 @@ If you have an existing `fly.toml` in your repo, this action will copy it with a
 | `org`     | Which Fly organization to launch the app under. Alternatively, set the env `FLY_ORG`. Defaults to `personal`.                                                                                 |
 | `path`    | Path to run the `flyctl` commands from. Useful if you have an existing `fly.toml` in a subdirectory.                                                                                          |
 | `update`  | Whether or not to update this Fly app when the PR is updated. Default `true`.                                                                                                                 |
-| `secrets` | Runtime environment variables.                                                                                                                                                                |
+| `secrets` | Runtime environment variables.                                                                                                                                                                 |
+| `vm`      | Changes the type of the VM. Defaults to shared-cpu-1x.
+| `vm_memory`| Adjusts VM's memory. Default to 256.
+
 
 ## Required Secrets
 
