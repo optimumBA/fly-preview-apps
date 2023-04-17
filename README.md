@@ -53,7 +53,7 @@ jobs:
       url: ${{ steps.deploy.outputs.url }}
 
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v3
 
       - name: Deploy
         id: deploy
@@ -92,7 +92,7 @@ jobs:
       url: ${{ steps.deploy.outputs.url }}
 
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v3
 
       - name: Deploy app
         id: deploy
@@ -115,7 +115,7 @@ Redis example:
 
 ```yaml
 steps:
-  - uses: actions/checkout@v1
+  - uses: actions/checkout@v3
 
   - name: Deploy redis
     uses: optimumBA/fly-pr-review-apps@main
