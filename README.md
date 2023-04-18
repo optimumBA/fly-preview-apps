@@ -100,7 +100,6 @@ jobs:
 
       - name: Clean up GitHub environment
         uses: strumwolf/delete-deployment-environment@v1
-        uses: strumwolf/delete-deployment-environment@v1
         if: ${{ github.event.action == 'closed' }}
         with:
           # ⚠️ The provided token needs permission for admin write:org
