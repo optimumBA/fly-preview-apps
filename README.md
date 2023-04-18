@@ -35,8 +35,8 @@ on:
 
 env:
   FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-  FLY_REGION: <put your desired region>
-  FLY_ORG: <put your fly org name>
+  FLY_REGION: fra
+  FLY_ORG: optimum
 
 jobs:
   staging_app:
@@ -57,7 +57,7 @@ jobs:
 
       - name: Deploy
         id: deploy
-        uses: optimumBA/fly-pr-review-apps@main
+        uses: optimumBA/fly-preview-apps@main
 ```
 
 ## With Secrets
@@ -65,7 +65,7 @@ jobs:
 ```YAML
       - name: Deploy
         id: deploy
-        uses: optimumBA/fly-pr-review-apps@main
+        uses: optimumBA/fly-preview-apps@main
         with:
           name: pr-${{ github.event.number }}-${{ env.REPO_NAME }}
           secrets: 'SECRET_1=${{ secrets.SECRET_1 }} SECRET_2=${{ secrets.SECRET_2 }}'
@@ -96,7 +96,7 @@ jobs:
 
       - name: Deploy app
         id: deploy
-        uses: optimumBA/fly-pr-review-apps@main
+        uses: optimumBA/fly-preview-apps@main
 
       - name: Clean up GitHub environment
         uses: strumwolf/delete-deployment-environment@v1
@@ -118,7 +118,7 @@ steps:
   - uses: actions/checkout@v3
 
   - name: Deploy redis
-    uses: optimumBA/fly-pr-review-apps@main
+    uses: optimumBA/fly-preview-apps@main
     with:
       update: false # Don't need to re-deploy redis when the PR is updated
       path: redis # Keep fly.toml in a subdirectory to avoid confusing flyctl
@@ -127,7 +127,7 @@ steps:
 
   - name: Deploy app
     id: deploy
-    uses: optimumBA/fly-pr-review-apps@main
+    uses: optimumBA/fly-preview-apps@main
     with:
       name: pr-${{ github.event.number }}-myapp-app
 ```
