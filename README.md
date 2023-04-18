@@ -35,8 +35,8 @@ on:
 
 env:
   FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-  FLY_REGION: fra
-  FLY_ORG: optimum
+  FLY_REGION: iad
+  FLY_ORG: personal
 
 jobs:
   staging_app:
